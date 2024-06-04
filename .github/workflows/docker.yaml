@@ -21,9 +21,18 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: kdcllc/tokenflow:latest
+        tags: |
+          type=sha,format=short,prefix=    # Add the short SHA as a tag
+
     - name: Build and push
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v4
       with:
         context: .
         push: true
-        tags: kdcllc/tokenflow:latest, kdcllc/tokenflow:${{ github.sha }}-${{ github.sha }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
