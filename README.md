@@ -1,6 +1,18 @@
 # TokenFlow
 
-TenantTokenFlow optimizes token generation and directory management across multiple tenants using Azure device flow. This repository empowers applications to capture user tokens seamlessly and utilize them for creating app registrations, users, and groups within accessible directories. Unlock the potential of multi-tenant applications with TenantTokenFlow.
+![I stand with Israel](./images/IStandWithIsrael.png)
+
+TokenFlow optimizes token generation and directory management across multiple tenants using Azure device flow. This repository empowers applications to capture user tokens seamlessly and utilize them for creating app registrations, users, and groups within accessible directories. Unlock the potential of multi-tenant applications with TokenFlow.
+
+## Hire me
+
+Please send [email](mailto:kingdavidconsulting@gmail.com) if you consider to **hire me**.
+
+[![buymeacoffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/vyve0og)
+
+## Give a Star! :star
+
+If you like or are using this project to learn or start your solution, please give it a star. Thanks!
 
 ## Running Locally
 
