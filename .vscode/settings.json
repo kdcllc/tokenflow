@@ -1,0 +1,9 @@
+{
+    "rest-client.environmentVariables": {
+        "$shared": {
+            "baseUrl": "http://localhost:6700",
+            "contentType": "application/text",
+            "X-Auth-Token": "169ddeb1-502a-42cf-a222-9dbb8ec2cbf6",
+        }
+    }
+}

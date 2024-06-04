@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "main:app",
+                "--reload",
+                "--port",
+                "6700"
+            ],
+            "jinja": true,
+            "env": {
+                "X_AUTH_TOKEN": "169ddeb1-502a-42cf-a222-9dbb8ec2cbf6",
+                "LOGGING_LEVEL": "DEBUG"
+            }
+        }
+    ]
+}

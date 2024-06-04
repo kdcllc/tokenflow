@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "ms-python.autopep8",
+        "ms-azuretools.vscode-docker",
+        "mikestead.dotenv",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "humao.rest-client"
+    ]
+}

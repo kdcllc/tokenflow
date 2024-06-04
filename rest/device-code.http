@@ -1,0 +1,4 @@
+
+POST {{baseUrl}}/device-code/user1
+Content-Type: {{contentType}}
+X-Auth-Token: {{X-Auth-Token}}

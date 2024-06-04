@@ -1,0 +1,33 @@
+# Ignore .git directory
+.git
+.vscode
+.github
+images
+rest
+
+.venv
+
+# Ignore cache directories
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore log files
+*.log
+
+# Ignore the Dockerfile
+Dockerfile
+
+# Ignore the docker-compose files
+docker-compose.yml
+docker-compose.*.yml
+
+# Ignore .env files
+.env
+
+# Ignore other unnecessary files
+*.bak
+*.swp
+*~
+*.DS_Store
