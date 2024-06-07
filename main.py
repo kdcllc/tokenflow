@@ -31,18 +31,21 @@ class DeviceCodeResponse(BaseModel):
     url: str
     device_code: str
 
+class TokenRequest(BaseModel):
+    resource: str
+
 @app.post("/device-code/{user_id}", response_model=DeviceCodeResponse)
 def get_device_code(user_id: str = Path(..., description="The unique ID of the user")):
     url, device_code = authenticator.get_device_code(user_id)
     return {"url": url, "device_code": device_code}
 
 @app.post("/token/{user_id}", response_model=TokenResponse)
-def get_token(user_id: str = Path(..., description="The unique ID of the user")):
+def get_token(token_request: TokenRequest, user_id: str = Path(..., description="The unique ID of the user")):
     if user_id not in authenticator.users_data  or not authenticator.users_data[user_id].get('device_code'):
         raise HTTPException(status_code=400, detail="Device code not requested")
 
     # ensure the user has authenticated
-    auth_thread = threading.Thread(target=authenticator.authenticate, args=(user_id,))
+    auth_thread = threading.Thread(target=authenticator.authenticate, args=(user_id, token_request.resource))
     auth_thread.start()
     auth_thread.join()
 
