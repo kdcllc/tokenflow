@@ -85,7 +85,7 @@ class AzureAuthenticator:
 
         return temp_dir
 
-    def get_token(self, user_id: str):
+    def get_token(self, user_id: str, resource: str):
         with self.lock:
             #wait for the command to finish
             child = self.users_data[user_id]['child']
@@ -98,7 +98,7 @@ class AzureAuthenticator:
             env = self.set_env(user_id)
 
             # Execute the command
-            result = subprocess.run(['az', 'account', 'get-access-token'], capture_output=True, text=True, env=env)
+            result = subprocess.run(['az', 'account', 'get-access-token', '--resource', resource], capture_output=True, text=True, env=env)
 
             # Check if the command was successful
             if result.returncode != 0:
@@ -110,14 +110,14 @@ class AzureAuthenticator:
 
             return token
 
-    def authenticate(self, user_id: str):
+    def authenticate(self, user_id: str, resource: str):
 
         retry_count = 0
         max_retries = 3
 
         while not self.users_data[user_id]['token'] and retry_count < max_retries:
             try:
-                token = self.get_token(user_id)
+                token = self.get_token(user_id, resource)
                 logging.info("Authentication successful.")
                 with self.lock:
                     self.users_data[user_id]['token'] = token

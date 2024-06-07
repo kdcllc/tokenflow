@@ -51,7 +51,7 @@ To run the application locally, follow these steps:
 6. **Run the application:**
 
     ```bash
-    uvicorn main:app --reload
+    uvicorn main:app --reload --port 6700
     ```
 
 ## Deploy the Container
