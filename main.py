@@ -1,7 +1,7 @@
 import logging
 import os
 import threading
-from fastapi import FastAPI, HTTPException, Path, Query
+from fastapi import Body, FastAPI, HTTPException, Path
 from pydantic import BaseModel
 from typing import Optional
 
@@ -40,7 +40,7 @@ def get_device_code(user_id: str = Path(..., description="The unique ID of the u
     return {"url": url, "device_code": device_code}
 
 @app.post("/token/{user_id}", response_model=TokenResponse)
-def get_token(token_request: TokenRequest, user_id: str = Path(..., description="The unique ID of the user")):
+def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., description="The unique ID of the user")):
     if user_id not in authenticator.users_data  or not authenticator.users_data[user_id].get('device_code'):
         raise HTTPException(status_code=400, detail="Device code not requested")
 

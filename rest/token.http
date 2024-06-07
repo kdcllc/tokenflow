@@ -1,9 +1,10 @@
+
 POST {{baseUrl}}/token/user1
 Content-Type: {{contentType}}
 X-Auth-Token: {{X-Auth-Token}}
 
 {
-  "resource": "https://graph.microsoft.com"
+    "resource": "https://graph.microsoft.com"
 }
 
 
