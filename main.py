@@ -25,7 +25,12 @@ if not x_auth_token:
 authenticator = AzureAuthenticator()
 
 class TokenResponse(BaseModel):
-    token: Optional[str]
+    accessToken: Optional[str]
+    expiresOn: Optional[str]
+    expires_on: Optional[int]
+    subscription: Optional[str]
+    tenant: Optional[str]
+    tokenType: Optional[str]
 
 class DeviceCodeResponse(BaseModel):
     url: str
@@ -50,7 +55,7 @@ def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., 
     auth_thread.join()
 
     token = authenticator.get_token_thread_safe(user_id)
-    return {"token": token}
+    return {"accessToken": token, "expiresOn": None, "expires_on": None, "subscription": None, "tenant": None, "tokenType": None}
 
 @app.get("/health")
 def health_check():
