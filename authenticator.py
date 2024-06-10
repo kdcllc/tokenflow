@@ -14,7 +14,6 @@ class AzureAuthenticator:
     def __init__(self):
         self.users_data = {}
         self.lock = threading.Lock()
-        self.cli = None
 
     def get_device_code(self, user_id: str):
 
@@ -75,20 +74,21 @@ class AzureAuthenticator:
         return env
     
     def get_temp_dir(self,user_id: str):
-        if os.path.exists('/.dockerenv'):
-            # We are running inside a Docker container
-            # /root/.temp/user_id
-            temp_dir = os.path.join('/app/.temp', user_id)
-            logging.info(f"Running inside a Docker container. Temp directory: {temp_dir}")
-        else:
-            # We are not running inside a Docker container
-            temp_dir = os.path.join(os.path.expanduser('~'), '.temp', user_id)
-            logging.info(f"Running outside a Docker container. Temp directory: {temp_dir}")
-        
-        # Ensure the directory exists
-        os.makedirs(temp_dir, exist_ok=True)
+        with self.lock:
+            if os.path.exists('/.dockerenv'):
+                # We are running inside a Docker container
+                # /root/.temp/user_id
+                temp_dir = os.path.join('/app/.temp', user_id)
+                logging.info(f"Running inside a Docker container. Temp directory: {temp_dir}")
+            else:
+                # We are not running inside a Docker container
+                temp_dir = os.path.join(os.path.expanduser('~'), '.temp', user_id)
+                logging.info(f"Running outside a Docker container. Temp directory: {temp_dir}")
+            
+            # Ensure the directory exists
+            os.makedirs(temp_dir, exist_ok=True)
 
-        return temp_dir
+            return temp_dir
 
     def get_token(self, user_id: str, resource: str):
         with self.lock:
@@ -111,31 +111,30 @@ class AzureAuthenticator:
 
             # Parse the output as JSON
             token_info = json.loads(result.stdout)
-            # token = token_info['accessToken']
-
-            return token_info #token
+            return token_info 
 
     def check_az_login(self):
-        # Execute the command
-        result = subprocess.run(['az', 'account', 'get-access-token'], capture_output=True, text=True)
+        with self.lock:
+            # Execute the command
+            result = subprocess.run(['az', 'account', 'get-access-token'], capture_output=True, text=True)
 
-        # Check if the output equals the specified string
-        if result.stdout.strip() == 'Please run "az login" to access your accounts.':
-            return False
-        else:
-            return True
+            # Check if the output equals the specified string
+            if result.stdout.strip() == 'Please run "az login" to access your accounts.':
+                return False
+            else:
+                return True
     
     def authenticate(self, user_id: str, resource: str):
-
         retry_count = 0
         max_retries = 3
 
-        while not self.users_data[user_id]['token'] and retry_count < max_retries:
+        while retry_count < max_retries:
             try:
                 token = self.get_token(user_id, resource)
                 logging.info("Authentication successful.")
                 with self.lock:
                     self.users_data[user_id]['token'] = token
+                break  # Exit the loop if authentication is successful
             except Exception as e:
                 logging.error("Waiting for user to authenticate..." + str(e))
                 time.sleep(10)
@@ -143,7 +142,6 @@ class AzureAuthenticator:
 
         if retry_count == max_retries:
             logging.error("Authentication failed after 3 attempts.")
-
         
     def get_token_thread_safe(self, user_id: str):
         with self.lock:
