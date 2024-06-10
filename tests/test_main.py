@@ -33,7 +33,19 @@ def test_get_token():
     with patch('authenticator.AzureAuthenticator.authenticate') as mock_authenticate:
         mock_authenticate.return_value = None
         with patch('authenticator.AzureAuthenticator.get_token_thread_safe') as mock_get_token_thread_safe:
-            mock_get_token_thread_safe.return_value = {"accessToken": "test_token"}
+            mock_get_token_thread_safe.return_value = {
+                "accessToken": "test_token",
+                "expiresOn": "2023-12-31T23:59:59.000Z",
+                "expires_on": 1672531199,
+                "subscription": "test_subscription",
+                "tenant": "test_tenant",
+                "tokenType": "Bearer"
+            }
             response = client.post(f"/token/{user_id}", json=token_request.dict(), headers={"X-Auth-Token": os.getenv('X_AUTH_TOKEN')})
             assert response.status_code == 200
             assert "accessToken" in response.json()
+            assert "expiresOn" in response.json()
+            assert "expires_on" in response.json()
+            assert "subscription" in response.json()
+            assert "tenant" in response.json()
+            assert "tokenType" in response.json()
