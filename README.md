@@ -40,12 +40,14 @@ To run the application locally, follow these steps:
 
     ```bash
     pip-compile requirements.in
+    pip-compile requirements.dev.in
     ```
 
 5. **Install the dependencies:**
 
     ```bash
     pip install -r requirements.txt
+    pip install -r requirements.dev.txt
     ```
 
 6. **Run the application:**
@@ -69,6 +71,12 @@ To deploy the application using Docker, use the following steps:
     ```bash
     docker run -e LOGGING_LEVEL=INFO -e X_AUTH_TOKEN=<your_auth_token> -p 6700:6700 kdcllc/tokenflow
     ```
+
+## Tests
+
+```bash
+     pytest tests/test_main.py  
+```
 
 ## API Documentation
 
