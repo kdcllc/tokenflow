@@ -39,17 +39,17 @@ class TokenRequest(BaseModel):
     resource: str
 
 @app.post("/device-code/{user_id}", response_model=DeviceCodeResponse)
-def get_device_code(user_id: str = Path(..., description="The unique ID of the user")):
-    url, device_code = authenticator.get_device_code(user_id)
+async def get_device_code(user_id: str = Path(..., description="The unique ID of the user")):
+    url, device_code = await authenticator.get_device_code(user_id)
     return {"url": url, "device_code": device_code}
 
 @app.post("/token/{user_id}", response_model=TokenResponse)
-def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., description="The unique ID of the user")):
+async def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., description="The unique ID of the user")):
     
-    if not authenticator.check_az_login():
+    if not await authenticator.check_az_login():
         raise HTTPException(status_code=400, detail="Device code not requested")
 
-    token_info =authenticator.authenticate(user_id, token_request.resource)
+    token_info = await authenticator.authenticate(user_id, token_request.resource)
 
     if token_info is None:
         raise HTTPException(status_code=400, detail="Token not found")
@@ -65,5 +65,5 @@ def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., 
     return token
 
 @app.get("/health")
-def health_check():
+async def health_check():
     return {"status": "UP"}
