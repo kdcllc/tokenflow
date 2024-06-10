@@ -9,6 +9,7 @@ import logging
 
 from fastapi import HTTPException
 import pexpect
+import functools
 
 
 class AzureAuthenticator:
@@ -104,7 +105,7 @@ class AzureAuthenticator:
 
         # Execute the command
         loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, subprocess.run, ['az', 'account', 'get-access-token', '--resource', resource], {'capture_output': True, 'text': True, 'env': env})
+        result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'account', 'get-access-token', '--resource', resource], capture_output=True, text=True, env=env))
 
         # Check if the command was successful
         if result.returncode != 0:
@@ -117,7 +118,7 @@ class AzureAuthenticator:
     async def check_az_login(self):
         # Execute the command
         loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, subprocess.run, ['az', 'account', 'get-access-token'], {'capture_output': True, 'text': True})
+        result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'account', 'get-access-token'], capture_output=True, text=True))
 
         # Check if the output equals the specified string
         if result.stdout.strip() == 'Please run "az login" to access your accounts.':
