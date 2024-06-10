@@ -75,7 +75,8 @@ To deploy the application using Docker, use the following steps:
 ## Tests
 
 ```bash
-     pytest tests/test_main.py  
+     pytest tests/test_main.py
+     pytest tests/test_authenticator.py
 ```
 
 ## API Documentation
