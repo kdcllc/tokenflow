@@ -24,6 +24,8 @@ class AzureAuthenticator:
         # Execute the command
         child = pexpect.spawn('az login --use-device-code', env=env, timeout=120)
 
+        logging.debug("Launching a device code process...")
+
         index = child.expect(['To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code .* to authenticate.', pexpect.EOF])
         logging.debug(str(child.before))
 
@@ -42,6 +44,8 @@ class AzureAuthenticator:
 
         with self.lock:
             self.users_data[user_id] = {'device_code': device_code, 'token': None, 'child': child}
+
+        logging.info("Device code process completed successfully.")
 
         url = 'https://microsoft.com/devicelogin'
         return url, device_code
@@ -106,9 +110,9 @@ class AzureAuthenticator:
 
             # Parse the output as JSON
             token_info = json.loads(result.stdout)
-            token = token_info['accessToken']
+            # token = token_info['accessToken']
 
-            return token
+            return token_info #token
 
     def authenticate(self, user_id: str, resource: str):
 
