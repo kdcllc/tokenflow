@@ -1,6 +1,5 @@
 import logging
 import os
-import threading
 from fastapi import Body, FastAPI, HTTPException, Path
 from pydantic import BaseModel
 from typing import Optional
@@ -40,21 +39,21 @@ class TokenRequest(BaseModel):
     resource: str
 
 @app.post("/device-code/{user_id}", response_model=DeviceCodeResponse)
-def get_device_code(user_id: str = Path(..., description="The unique ID of the user")):
-    url, device_code = authenticator.get_device_code(user_id)
+async def get_device_code(user_id: str = Path(..., description="The unique ID of the user")):
+    url, device_code = await authenticator.get_device_code(user_id)
     return {"url": url, "device_code": device_code}
 
 @app.post("/token/{user_id}", response_model=TokenResponse)
-def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., description="The unique ID of the user")):
-    if user_id not in authenticator.users_data  or not authenticator.users_data[user_id].get('device_code'):
+async def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., description="The unique ID of the user")):
+    
+    if not await authenticator.check_az_login():
         raise HTTPException(status_code=400, detail="Device code not requested")
 
-    # ensure the user has authenticated
-    auth_thread = threading.Thread(target=authenticator.authenticate, args=(user_id, token_request.resource))
-    auth_thread.start()
-    auth_thread.join()
+    token_info = await authenticator.authenticate(user_id, token_request.resource)
 
-    token_info = authenticator.get_token_thread_safe(user_id)
+    if token_info is None:
+        raise HTTPException(status_code=400, detail="Token not found")
+    
     token = {
             "accessToken": token_info["accessToken"], 
             "expiresOn": token_info["expiresOn"], 
@@ -66,5 +65,5 @@ def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., 
     return token
 
 @app.get("/health")
-def health_check():
+async def health_check():
     return {"status": "UP"}
