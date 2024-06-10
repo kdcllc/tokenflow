@@ -46,6 +46,7 @@ def get_device_code(user_id: str = Path(..., description="The unique ID of the u
 
 @app.post("/token/{user_id}", response_model=TokenResponse)
 def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., description="The unique ID of the user")):
+    
     if user_id not in authenticator.users_data  or not authenticator.users_data[user_id].get('device_code'):
         raise HTTPException(status_code=400, detail="Device code not requested")
 

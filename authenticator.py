@@ -77,6 +77,7 @@ class AzureAuthenticator:
     def get_temp_dir(self,user_id: str):
         if os.path.exists('/.dockerenv'):
             # We are running inside a Docker container
+            # /root/.temp/user_id
             temp_dir = os.path.join('/app/.temp', user_id)
             logging.info(f"Running inside a Docker container. Temp directory: {temp_dir}")
         else:
@@ -114,6 +115,16 @@ class AzureAuthenticator:
 
             return token_info #token
 
+    def check_az_login(self):
+        # Execute the command
+        result = subprocess.run(['az', 'account', 'get-access-token'], capture_output=True, text=True)
+
+        # Check if the output equals the specified string
+        if result.stdout.strip() == 'Please run "az login" to access your accounts.':
+            return False
+        else:
+            return True
+    
     def authenticate(self, user_id: str, resource: str):
 
         retry_count = 0
