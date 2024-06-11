@@ -1,4 +1,5 @@
 import json
+from math import log
 import os
 import re
 import subprocess
@@ -20,6 +21,15 @@ class AzureAuthenticator:
     async def get_device_code(self, user_id: str):
         # Set the environment variable
         env = self.set_env(user_id)
+        # run az logout to clear any existing sessions
+        logging.info("Logging out of Azure CLI...")
+        result = subprocess.run(['az', 'logout'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        # make sure the user is logged out
+        time.sleep(5)
+        if result.returncode != 0:
+            logging.error(f"Failed to logout: {result.stderr.decode('utf-8')}")
+        else:
+            logging.info("Logged out of Azure CLI.")
 
         # Execute the command
         child = pexpect.spawn('az login --use-device-code', env=env, timeout=120)
