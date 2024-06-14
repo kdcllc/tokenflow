@@ -53,6 +53,8 @@ To run the application locally, follow these steps:
 6. **Run the application:**
 
     ```bash
+    #only on WSL
+    export X_AUTH_TOKEN=169ddeb1-502a-42cf-a222-9dbb8ec2cbf6
     uvicorn main:app --reload --port 6700
     ```
 
