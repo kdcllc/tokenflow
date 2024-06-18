@@ -4,6 +4,18 @@
 
 TokenFlow optimizes token generation and directory management across multiple tenants using Azure device flow. This repository empowers applications to capture user tokens seamlessly and utilize them for creating app registrations, users, and groups within accessible directories. Unlock the potential of multi-tenant applications with TokenFlow.
 
+![azcli container](images/azcli-api-container.png)
+
+This is a straightforward setup for managing Azure resources using containerized applications and Blob Storage, coupled with an automated user login process via Azure Device Code.
+
+Setup Overview
+- **Azure Container App**: Acts as the host for TokenFlow Api Docker image.
+- **Azure Blob Storage**: Manages state data related to Azure Command Line Interface (CLI) operations.
+
+Login Flow
+1. Prompt user authentication using Azure Device Code.
+2. Upon successful login, retrieve access token for resource management from the provided endpoint.
+
 ## Hire me
 
 Please send [email](mailto:kingdavidconsulting@gmail.com) if you consider to **hire me**.
