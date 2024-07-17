@@ -11,6 +11,7 @@ from fastapi import HTTPException
 import pexpect
 import functools
 
+logger = logging.getLogger(__name__)
 
 class AzureAuthenticator:
     def __init__(self):
@@ -21,40 +22,40 @@ class AzureAuthenticator:
         # Set the environment variable
         env = self.set_env(user_id)
         # run az logout to clear any existing sessions
-        logging.info("Logging out of Azure CLI...")
+        logger.info("Logging out of Azure CLI...")
         result = subprocess.run(['az', 'logout'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         # make sure the user is logged out
         time.sleep(5)
         if result.returncode != 0:
-            logging.error(f"Failed to logout: {result.stderr.decode('utf-8')}")
+            logger.error(f"Failed to logout: {result.stderr.decode('utf-8')}")
         else:
-            logging.info("Logged out of Azure CLI.")
+            logger.info("Logged out of Azure CLI.")
 
         # Execute the command
         child = pexpect.spawn('az login --use-device-code', env=env, timeout=120)
 
-        logging.debug("Launching a device code process...")
+        logger.debug("Launching a device code process...")
 
         index = child.expect(['To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code .* to authenticate.', pexpect.EOF])
-        logging.debug(str(child.before))
+        logger.debug(str(child.before))
 
         if index == 0:
             # Extract the device code from the output
             match = re.search('enter the code (.*?) to authenticate', child.after.decode())
             if match:
                 device_code = match.group(1)
-                logging.debug(f"Device code: {device_code}")
+                logger.debug(f"Device code: {device_code}")
             else:
-                logging.error("Could not extract device code")
+                logger.error("Could not extract device code")
                 raise HTTPException(status_code=500, detail="Could not extract device code")
         elif index == 1:
-            logging.error("Command exited before device code was provided")
+            logger.error("Command exited before device code was provided")
             raise HTTPException(status_code=500, detail="Command exited before device code was provided")
 
         with self.lock:
             self.users_data[user_id] = {'child': child}
 
-        logging.info("Device code process completed successfully.")
+        logger.info("Device code process completed successfully.")
 
         url = 'https://microsoft.com/devicelogin'
         return url, device_code
@@ -75,10 +76,10 @@ class AzureAuthenticator:
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 
         if result.returncode != 0:
-            logging.error(f"Failed to set login_experience_v2: {
+            logger.error(f"Failed to set login_experience_v2: {
                           result.stderr.decode('utf-8')}")
         else:
-            logging.info("az config set login_experience_v2 successfully")
+            logger.info("az config set login_experience_v2 successfully")
 
         # New command to only show errors
         error_command = ['az', 'config', 'set', 'core.only_show_errors=yes']
@@ -86,10 +87,10 @@ class AzureAuthenticator:
             error_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 
         if error_result.returncode != 0:
-            logging.error(f"Failed to set only_show_errors: {
+            logger.error(f"Failed to set only_show_errors: {
                         error_result.stderr.decode('utf-8')}")
         else:
-            logging.info("az config set only_show_errors set successfully")
+            logger.info("az config set only_show_errors set successfully")
 
         return env
     
@@ -98,11 +99,11 @@ class AzureAuthenticator:
             # We are running inside a Docker container
             # /root/.temp/user_id
             temp_dir = os.path.join('/app/.temp', user_id)
-            logging.info(f"Running inside a Docker container. Temp directory: {temp_dir}")
+            logger.info(f"Running inside a Docker container. Temp directory: {temp_dir}")
         else:
             # We are not running inside a Docker container
             temp_dir = os.path.join(os.path.expanduser('~'), '.temp', user_id)
-            logging.info(f"Running outside a Docker container. Temp directory: {temp_dir}")
+            logger.info(f"Running outside a Docker container. Temp directory: {temp_dir}")
         
         # Ensure the directory exists
         os.makedirs(temp_dir, exist_ok=True)
@@ -114,12 +115,12 @@ class AzureAuthenticator:
             # Wait for the command to finish
             child = self.users_data[user_id]['child']
             child.close(True)
-            logging.debug(f'{child.exitstatus}-{child.signalstatus}')
+            logger.debug(f'{child.exitstatus}-{child.signalstatus}')
 
             output = child.before.decode() + child.after.decode()
-            logging.debug(output)
+            logger.debug(output)
         except KeyError:
-            logging.warning(f"No child process found for user {user_id}. Continuing execution.")
+            logger.warning(f"No child process found for user {user_id}. Continuing execution.")
 
         env = self.set_env(user_id)
 
@@ -154,19 +155,19 @@ class AzureAuthenticator:
             try:
                 token = await self.get_token(user_id, resource)
 
-                logging.info("Authentication successful.")
+                logger.info("Authentication successful.")
                 return token
             except Exception as e:
                 error_message = str(e)
                 if 'az login' in error_message:
-                    logging.error("'az login' found in the error message. Returning None.")
+                    logger.error("'az login' found in the error message. Returning None.")
                     return None
 
-            logging.error("Waiting for user to authenticate..." + error_message)
+            logger.error("Waiting for user to authenticate..." + error_message)
             await asyncio.sleep(10)
             retry_count += 1
 
         if retry_count == max_retries:
-            logging.error("Authentication failed after 3 attempts.")
+            logger.error("Authentication failed after 3 attempts.")
         
         return None
