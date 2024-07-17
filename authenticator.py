@@ -1,5 +1,4 @@
 import json
-from math import log
 import os
 import re
 import subprocess
@@ -76,10 +75,21 @@ class AzureAuthenticator:
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 
         if result.returncode != 0:
-            print(f"Failed to set config: {result.stderr.decode('utf-8')}")
-            logging.error(f"Failed to set config: {result.stderr.decode('utf-8')}")
+            logging.error(f"Failed to set login_experience_v2: {
+                          result.stderr.decode('utf-8')}")
         else:
-            logging.info("az config set successfully")        
+            logging.info("az config set login_experience_v2 successfully")
+
+        # New command to only show errors
+        error_command = ['az', 'config', 'set', 'core.only_show_errors=yes']
+        error_result = subprocess.run(
+            error_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+
+        if error_result.returncode != 0:
+            logging.error(f"Failed to set only_show_errors: {
+                        error_result.stderr.decode('utf-8')}")
+        else:
+            logging.info("az config set only_show_errors set successfully")
 
         return env
     
@@ -107,7 +117,7 @@ class AzureAuthenticator:
             logging.debug(f'{child.exitstatus}-{child.signalstatus}')
 
             output = child.before.decode() + child.after.decode()
-            logging.info(output)
+            logging.debug(output)
         except KeyError:
             logging.warning(f"No child process found for user {user_id}. Continuing execution.")
 
