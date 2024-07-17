@@ -67,7 +67,7 @@ To run the application locally, follow these steps:
     ```bash
     #only on WSL
     export X_AUTH_TOKEN=169ddeb1-502a-42cf-a222-9dbb8ec2cbf6
-    uvicorn main:app --reload --port 6700
+    uvicorn src.api:app --reload --port 6700
     ```
 
 ## Deploy the Container
@@ -91,6 +91,9 @@ To deploy the application using Docker, use the following steps:
 ```bash
      pytest tests/test_main.py
      pytest tests/test_authenticator.py
+
+     # runs all tests
+     python -m pytest
 ```
 
 ## API Documentation

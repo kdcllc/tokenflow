@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 # Add the directory containing authenticator.py to the Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '/../', 'src'))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 
 from token_authenticator import AzureAuthenticator
 

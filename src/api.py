@@ -4,8 +4,9 @@ from fastapi import Body, FastAPI, HTTPException, Path
 from pydantic import BaseModel
 from typing import Optional
 
-from token_authenticator import AzureAuthenticator
-from auth_middleware import AuthMiddleware
+from src.auth_middleware import AuthMiddleware
+from src.token_authenticator import AzureAuthenticator
+
 
 # Get logging level from environment variable
 logging_level = os.getenv('LOGGING_LEVEL', 'INFO')
