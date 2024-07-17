@@ -136,7 +136,21 @@ class AzureAuthenticator:
         token_info = json.loads(result.stdout)
         return token_info 
 
-    async def check_az_login(self):
+    async def get_list_of_subscriptions(self):
+        """
+        Get a list of Azure subscriptions.
+        """
+        # Execute the command
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'account', 'list'], capture_output=True, text=True))
+
+        # Check if the command was successful
+        if result.returncode != 0:
+            raise Exception(f'Command failed with exit code {result.returncode}: {result.stderr}')
+
+        # Parse the output as JSON
+        subscriptions = json.loads(result.stdout)
+        return subscriptions
         # Execute the command
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'account', 'get-access-token'], capture_output=True, text=True))
