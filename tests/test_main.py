@@ -7,7 +7,7 @@ from unittest.mock import patch
 os.environ['X_AUTH_TOKEN'] = 'test_token'
 
 # Add the directory containing main.py to the Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
+sys.path.append(os.path.join(os.path.dirname(__file__), '/../', 'src'))
 
 from main import app, TokenRequest
 
