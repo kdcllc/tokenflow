@@ -1,13 +1,12 @@
 import os
 import sys
 import pytest
-import threading
 from unittest.mock import patch, MagicMock
 
 # Add the directory containing authenticator.py to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
-from authenticator import AzureAuthenticator
+from token_authenticator import AzureAuthenticator
 
 @pytest.fixture
 def authenticator():
