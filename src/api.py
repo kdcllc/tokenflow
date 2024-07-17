@@ -65,6 +65,9 @@ async def get_token(token_request: TokenRequest = Body(...), user_id: str = Path
             }
     return token
 
-@app.get("/health")
+@app.get("/subscriptions/{user_id}")
+async def get_list_of_subscriptions(user_id: str = Path(..., description="The unique ID of the user")):
+    subscriptions = await authenticator.get_list_of_subscriptions(user_id)
+    return subscriptions
 async def health_check():
     return {"status": "UP"}
