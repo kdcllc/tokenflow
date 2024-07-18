@@ -7,64 +7,104 @@ import asyncio
 import time
 import logging
 
-from fastapi import HTTPException
 import pexpect
 import functools
 
 logger = logging.getLogger(__name__)
+
 
 class AzureAuthenticator:
     def __init__(self):
         self.users_data = {}
         self.lock = threading.Lock()
 
-    async def get_device_code(self, user_id: str):
+    async def get_device_code_async(self, user_id: str):
+        """
+        Retrieves the device code for Azure CLI authentication.
+
+        Args:
+            user_id (str): The user ID.
+
+        Returns:
+            tuple: A tuple containing the URL for device login and the device code.
+
+        Raises:
+            Exception: If there is an error retrieving the device code.
+        """
+
         # Set the environment variable
-        env = self.set_env(user_id)
+        env = self.__set_env(user_id)
+
         # run az logout to clear any existing sessions
-        logger.info("Logging out of Azure CLI...")
-        result = subprocess.run(['az', 'logout'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        logger.info(f"User: {user_id} logging out of Azure CLI...")
+
+        result = subprocess.run(
+            ['az', 'logout'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+
         # make sure the user is logged out
         time.sleep(5)
+
         if result.returncode != 0:
-            logger.error(f"Failed to logout: {result.stderr.decode('utf-8')}")
+            logger.error(f"User: {user_id} failed to logout: {
+                         result.stderr.decode('utf-8')}")
         else:
-            logger.info("Logged out of Azure CLI.")
+            logger.info(f"User: {user_id} logged out of Azure CLI.")
 
         # Execute the command
-        child = pexpect.spawn('az login --use-device-code', env=env, timeout=120)
+        child = pexpect.spawn(
+            'az login --use-device-code', env=env, timeout=120)
 
-        logger.debug("Launching a device code process...")
+        logger.debug(f"User: {user_id} launching a device code process...")
 
-        index = child.expect(['To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code .* to authenticate.', pexpect.EOF])
+        index = child.expect(
+            ['To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code .* to authenticate.', pexpect.EOF])
         logger.debug(str(child.before))
 
         if index == 0:
             # Extract the device code from the output
-            match = re.search('enter the code (.*?) to authenticate', child.after.decode())
+            match = re.search(
+                'enter the code (.*?) to authenticate', child.after.decode())
             if match:
                 device_code = match.group(1)
-                logger.debug(f"Device code: {device_code}")
+                logger.debug(f"User: {user_id} device code: {
+                             device_code} was created successfully.")
             else:
-                logger.error("Could not extract device code")
-                raise HTTPException(status_code=500, detail="Could not extract device code")
+                ex = f"User: {
+                    user_id} could not extract device code successfully."
+                logger.error(ex)
+                raise Exception(ex)
         elif index == 1:
-            logger.error("Command exited before device code was provided")
-            raise HTTPException(status_code=500, detail="Command exited before device code was provided")
+            ex = f"User: {
+                user_id} command exited before device code was provided."
+            logger.error(ex)
+            raise Exception(ex)
 
         with self.lock:
             self.users_data[user_id] = {'child': child}
 
-        logger.info("Device code process completed successfully.")
+        logger.info(
+            f"User: {user_id} device code process completed successfully.")
 
         url = 'https://microsoft.com/devicelogin'
         return url, device_code
 
-    def set_env(self, user_id):
+    async def check_az_login_async(self):
+        # Execute the command
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'account', 'get-access-token'], capture_output=True, text=True))
+
+        if re.search(r"Please run 'az login'.*to setup account", result.stderr):
+            # Your code here
+            logger.error(f"{result.stderr}")
+            return False
+        else:
+            return True
+
+    def __set_env(self, user_id):
         # to utilize the multiple user login experience, we need to set the environment variable AZURE_CONFIG_DIR
         # https://github.com/microsoft/azure-pipelines-tasks/issues/8314
 
-        temp_dir = self.get_temp_dir(user_id)
+        temp_dir = self.__get_temp_dir(user_id)
         env = os.environ.copy()
         env['AZURE_CONFIG_DIR'] = temp_dir
 
@@ -73,13 +113,14 @@ class AzureAuthenticator:
 
         # execute az config set core.login_experience_v2=off
         command = ['az', 'config', 'set', 'core.login_experience_v2=off']
-        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        result = subprocess.run(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 
         if result.returncode != 0:
             logger.error(f"Failed to set login_experience_v2: {
-                          result.stderr.decode('utf-8')}")
+                result.stderr.decode('utf-8')}")
         else:
-            logger.info("az config set login_experience_v2 successfully")
+            logger.debug("az config set login_experience_v2 successfully")
 
         # New command to only show errors
         error_command = ['az', 'config', 'set', 'core.only_show_errors=yes']
@@ -88,29 +129,24 @@ class AzureAuthenticator:
 
         if error_result.returncode != 0:
             logger.error(f"Failed to set only_show_errors: {
-                        error_result.stderr.decode('utf-8')}")
+                error_result.stderr.decode('utf-8')}")
         else:
-            logger.info("az config set only_show_errors set successfully")
+            logger.debug("az config set only_show_errors set successfully")
 
         return env
-    
-    def get_temp_dir(self, user_id: str):
-        if os.path.exists('/.dockerenv'):
-            # We are running inside a Docker container
-            # /root/.temp/user_id
-            temp_dir = os.path.join('/app/.temp', user_id)
-            logger.info(f"Running inside a Docker container. Temp directory: {temp_dir}")
-        else:
-            # We are not running inside a Docker container
-            temp_dir = os.path.join(os.path.expanduser('~'), '.temp', user_id)
-            logger.info(f"Running outside a Docker container. Temp directory: {temp_dir}")
-        
+
+    def __get_temp_dir(self, user_id: str):
+
+        temp_dir = os.path.join(os.path.expanduser('~'), '.temp', user_id)
+        logger.info(
+            f"User: {user_id} - temp directory: {temp_dir}")
+
         # Ensure the directory exists
         os.makedirs(temp_dir, exist_ok=True)
 
         return temp_dir
 
-    async def get_token(self, user_id: str, resource: str):
+    async def __get_token(self, user_id: str, resource: str):
         try:
             # Wait for the command to finish
             child = self.users_data[user_id]['child']
@@ -120,9 +156,10 @@ class AzureAuthenticator:
             output = child.before.decode() + child.after.decode()
             logger.debug(output)
         except KeyError:
-            logger.warning(f"No child process found for user {user_id}. Continuing execution.")
+            logger.warning(f"No child process found for user {
+                           user_id}. Continuing execution.")
 
-        env = self.set_env(user_id)
+        env = self.__set_env(user_id)
 
         # Execute the command
         loop = asyncio.get_event_loop()
@@ -130,53 +167,58 @@ class AzureAuthenticator:
 
         # Check if the command was successful
         if result.returncode != 0:
-            raise Exception(f'Command failed with exit code {result.returncode}: {result.stderr}')
+            raise Exception(f'az account get-access-token --resource {
+                            resource} command failed with exit code {result.returncode}: {result.stderr}')
 
         # Parse the output as JSON
         token_info = json.loads(result.stdout)
-        return token_info 
+        return token_info
 
     async def get_list_of_subscriptions(self, user_id: str):
         """
-        Get a list of Azure subscriptions.
+        Retrieves a list of azure subscriptions for the specified azure user.
+
+        Args:
+            user_id (str): The ID of the user.
+
+        Returns:
+            list: A list of subscriptions.
+
+        Raises:
+            Exception: If the command fails with a non-zero exit code.
         """
-        env = self.set_env(user_id)
-        
+
+        # Set the environment variable
+        env = self.__set_env(user_id)
+
         # Execute the command
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'account', 'list'], capture_output=True, text=True, env=env))
 
         # Check if the command was successful
         if result.returncode != 0:
-            raise Exception(f'Command failed with exit code {result.returncode}: {result.stderr}')
+            raise Exception(f'az account list command failed with exit code {
+                            result.returncode}: {result.stderr}')
 
         # Parse the output as JSON
         subscriptions = json.loads(result.stdout)
         return subscriptions
-        # Execute the command
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'account', 'get-access-token'], capture_output=True, text=True))
 
-        # Check if the output equals the specified string
-        if result.stdout.strip() == 'Please run "az login" to access your accounts.':
-            return False
-        else:
-            return True
-    
-    async def authenticate(self, user_id: str, resource: str):
+    async def authenticate_async(self, user_id: str, resource: str):
         retry_count = 0
         max_retries = 3
 
         while retry_count < max_retries:
             try:
-                token = await self.get_token(user_id, resource)
+                token = await self.__get_token(user_id, resource)
 
                 logger.info("Authentication successful.")
                 return token
             except Exception as e:
                 error_message = str(e)
                 if 'az login' in error_message:
-                    logger.error("'az login' found in the error message. Returning None.")
+                    logger.error(
+                        "'az login' found in the error message. Returning None.")
                     return None
 
             logger.error("Waiting for user to authenticate..." + error_message)
@@ -185,5 +227,5 @@ class AzureAuthenticator:
 
         if retry_count == max_retries:
             logger.error("Authentication failed after 3 attempts.")
-        
+
         return None
