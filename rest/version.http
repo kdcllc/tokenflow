@@ -1,0 +1,3 @@
+GET {{baseUrl}}/health_check
+Content-Type: {{contentType}}
+X-Auth-Token: {{X-Auth-Token}}

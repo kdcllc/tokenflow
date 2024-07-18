@@ -263,9 +263,9 @@ class AzureAuthenticator:
         if result.returncode != 0:
             raise Exception(f'az --version command failed with exit code {result.returncode}: {result.stderr}')
 
-        # Extract the version from the output
-        version_match = re.search(r'azure-cli\s+(\S+)', result.stdout)
-        if version_match:
-            return version_match.group(1)
-        else:
-            raise Exception('Failed to parse Azure CLI version from output')
+        # Parse the output as JSON
+        try:
+            version_info = json.loads(result.stdout)
+            return version_info
+        except json.JSONDecodeError as e:
+            raise Exception(f'Failed to parse Azure CLI version from output: {str(e)}')
