@@ -9,6 +9,7 @@
 FROM python:3.12
 
 # Install necessary packages including lsb-release, then obtain the currently installed distribution and store an Azure CLI version of choice
+# https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt#install-specific-version
 RUN apt-get update && \
     apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg && \
     AZ_DIST=$(lsb_release -cs) && \
