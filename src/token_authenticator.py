@@ -89,24 +89,24 @@ class AzureAuthenticator:
         return url, device_code
 
     async def check_az_login_async(self, user_id: str):
-            """
-            Checks if the user is logged in to Azure CLI.
+        """
+        Checks if the user is logged in to Azure CLI.
 
-            Returns:
-                bool: True if the user is logged in, False otherwise.
-            """
-            env = self.__set_env(user_id=user_id)
-            
-            # Execute the command
-            loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'account', 'get-access-token'], capture_output=True, text=True, env=env))
+        Returns:
+            bool: True if the user is logged in, False otherwise.
+        """
+        env = self.__set_env(user_id=user_id)
 
-            if re.search(r"Please run 'az login'.*to setup account", result.stderr):
-                # Your code here
-                logger.warning(f"{result.stderr}")
-                return False
-            else:
-                return True
+        # Execute the command
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'account', 'get-access-token'], capture_output=True, text=True, env=env))
+
+        if re.search(r"Please run 'az login'.*to setup account", result.stderr):
+            # Your code here
+            logger.warning(f"{result.stderr}")
+            return False
+        else:
+            return True
 
     def __set_env(self, user_id):
         # to utilize the multiple user login experience, we need to set the environment variable AZURE_CONFIG_DIR
@@ -126,7 +126,7 @@ class AzureAuthenticator:
 
         if result.returncode != 0:
             logger.error(f"Failed to set login_experience_v2: {
-                result.stderr.decode('utf-8')}")
+                         result.stderr.decode('utf-8')}")
         else:
             logger.debug("az config set login_experience_v2 successfully")
 
@@ -137,7 +137,7 @@ class AzureAuthenticator:
 
         if error_result.returncode != 0:
             logger.error(f"Failed to set only_show_errors: {
-                error_result.stderr.decode('utf-8')}")
+                         error_result.stderr.decode('utf-8')}")
         else:
             logger.debug("az config set only_show_errors set successfully")
 
@@ -154,11 +154,11 @@ class AzureAuthenticator:
 
         return temp_dir
 
-    async def __get_token(self, 
-                          user_id: str, 
-                          resource: str, 
-                          subscription_id: str = None, 
-                          tenant_id: str = None):
+    async def __get_token_async(self,
+                                user_id: str,
+                                resource: str,
+                                subscription_id: str = None,
+                                tenant_id: str = None):
         try:
             # Wait for the command to finish
             child = self.users_data[user_id]['child']
@@ -179,20 +179,21 @@ class AzureAuthenticator:
 
         if tenant_id:
             command.extend(['--tenant', tenant_id])
-        
+
         # Execute the command
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(None, functools.partial(subprocess.run, command, capture_output=True, text=True, env=env))
 
         # Check if the command was successful
         if result.returncode != 0:
-            raise Exception(f'az account get-access-token --resource {resource} command failed with exit code {result.returncode}: {result.stderr}')
+            raise Exception(f'az account get-access-token --resource {
+                            resource} command failed with exit code {result.returncode}: {result.stderr}')
 
         # Parse the output as JSON
         token_info = json.loads(result.stdout)
         return token_info
 
-    async def get_list_of_subscriptions(self, user_id: str):
+    async def get_list_of_subscriptions_async(self, user_id: str):
         """
         Retrieves a list of azure subscriptions for the specified azure user.
 
@@ -228,7 +229,7 @@ class AzureAuthenticator:
 
         while retry_count < max_retries:
             try:
-                token = await self.__get_token(user_id, resource)
+                token = await self.__get_token_async(user_id, resource)
 
                 logger.info("Authentication successful.")
                 return token
