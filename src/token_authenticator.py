@@ -248,3 +248,24 @@ class AzureAuthenticator:
             logger.error("Authentication failed after 3 attempts.")
 
         return None
+
+    async def get_version_async(self):
+        """
+        Retrieves the version of the Azure CLI.
+
+        Returns:
+            str: The version of the Azure CLI.
+        """
+        # Execute the command
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', '--version'], capture_output=True, text=True))
+
+        if result.returncode != 0:
+            raise Exception(f'az --version command failed with exit code {result.returncode}: {result.stderr}')
+
+        # Extract the version from the output
+        version_match = re.search(r'azure-cli\s+(\S+)', result.stdout)
+        if version_match:
+            return version_match.group(1)
+        else:
+            raise Exception('Failed to parse Azure CLI version from output')

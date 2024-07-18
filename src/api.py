@@ -132,4 +132,8 @@ async def health_check():
     Returns:
         dict: A dictionary containing the status of the health check.
     """
-    return {"status": "UP"}
+    try:
+        version = await authenticator.get_version_async()
+        return {"status": "UP", "version": version}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
