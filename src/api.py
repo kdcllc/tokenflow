@@ -125,6 +125,7 @@ async def check_az_login_async(user_id: str):
             status_code=400, detail="Device code was not requested")
 
 
+@app.get("/healthz")
 async def health_check():
     """
     Performs a health check and returns the status.
