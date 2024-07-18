@@ -75,7 +75,7 @@ async def get_device_code(user_id: str = Path(..., description="The unique ID of
 async def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., description="The unique ID of the user")):
 
     try:
-        await check_az_login_async(user_id=user_id)
+        await __check_az_login_async(user_id=user_id)
 
         token_info = await authenticator.authenticate_async(user_id, token_request.resource)
 
@@ -108,7 +108,7 @@ async def get_list_of_subscriptions_async(user_id: str = Path(..., description="
 
     """
     try:
-        await check_az_login_async(user_id=user_id)
+        await __check_az_login_async(user_id=user_id)
 
         subscriptions = await authenticator.get_list_of_subscriptions_async(user_id)
         return subscriptions
@@ -116,7 +116,7 @@ async def get_list_of_subscriptions_async(user_id: str = Path(..., description="
         raise HTTPException(status_code=400, detail=str(e))
 
 
-async def check_az_login_async(user_id: str):
+async def __check_az_login_async(user_id: str):
 
     logger.info(f"Checking if user: {user_id} has requested device code")
 
