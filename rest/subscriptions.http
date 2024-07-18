@@ -1,0 +1,4 @@
+
+GET {{baseUrl}}/subscriptions/user1
+Content-Type: {{contentType}}
+X-Auth-Token: {{X-Auth-Token}}

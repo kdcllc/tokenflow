@@ -1,0 +1,12 @@
+
+POST {{baseUrl}}/tenant_token/user1
+Content-Type: {{contentType}}
+X-Auth-Token: {{X-Auth-Token}}
+
+{
+    "resource": "https://graph.microsoft.com",
+    "tenantId": "",
+    "subscriptionId": ""
+}
+
+

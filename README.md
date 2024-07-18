@@ -1,5 +1,10 @@
 # TokenFlow
 
+[![GitHub](https://img.shields.io/github/license/kdcllc/tokenflow.svg)](https://github.com/kdcllc/tokenflow/blob/master/LICENSE)
+![Python](https://img.shields.io/badge/python-3.12-blue.svg)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111.0-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)
+[![GitHub stars](https://img.shields.io/github/stars/kdcllc/tokenflow.svg?style=social)](https://github.com/kdcllc/tokenflow/stargazers)
+
 ![I stand with Israel](./images/IStandWithIsrael.png)
 
 TokenFlow optimizes token generation and directory management across multiple tenants using Azure device flow. This repository empowers applications to capture user tokens seamlessly and utilize them for creating app registrations, users, and groups within accessible directories. Unlock the potential of multi-tenant applications with TokenFlow.
@@ -67,7 +72,7 @@ To run the application locally, follow these steps:
     ```bash
     #only on WSL
     export X_AUTH_TOKEN=169ddeb1-502a-42cf-a222-9dbb8ec2cbf6
-    uvicorn main:app --reload --port 6700
+    uvicorn src.api:app --reload --port 6700
     ```
 
 ## Deploy the Container
@@ -91,6 +96,9 @@ To deploy the application using Docker, use the following steps:
 ```bash
      pytest tests/test_main.py
      pytest tests/test_authenticator.py
+
+     # runs all tests
+     python -m pytest
 ```
 
 ## API Documentation
