@@ -1,3 +1,0 @@
-GET {{baseUrl}}/healthz
-Content-Type: {{contentType}}
-X-Auth-Token: {{X-Auth-Token}}

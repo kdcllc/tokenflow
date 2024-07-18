@@ -135,6 +135,6 @@ async def health_check():
     """
     try:
         version = await authenticator.get_version_async()
-        return {"status": "UP", "version": version}
+        return {"status": "up", "version": version}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

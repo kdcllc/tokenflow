@@ -258,7 +258,7 @@ class AzureAuthenticator:
         """
         # Execute the command
         loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', '--version'], capture_output=True, text=True))
+        result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'version'], capture_output=True, text=True))
 
         if result.returncode != 0:
             raise Exception(f'az --version command failed with exit code {result.returncode}: {result.stderr}')
