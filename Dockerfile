@@ -1,7 +1,12 @@
 #
 # docker build -t kdcllc/tokenflow .
+#
 # docker build --no-cache -t kdcllc/tokenflow .
+#
 # docker run -p 6700:8080 -e X_AUTH_TOKEN=169ddeb1-502a-42cf-a222-9dbb8ec2cbf6 -e LOGGING_LEVEL=DEBUG kdcllc/tokenflow
+#
+# keep the state of the azure cli
+# docker run -p 6700:8080 -v tokenflow:/root/.temp/ -e X_AUTH_TOKEN=169ddeb1-502a-42cf-a222-9dbb8ec2cbf6 -e LOGGING_LEVEL=DEBUG kdcllc/tokenflow
 #
 # docker push kdcllc/tokenflow
 
