@@ -45,9 +45,10 @@ class TokenRequest(BaseModel):
     resource: str
 
 
-class TokenSubRequest(BaseModel):
+class TenantTokenRequest(BaseModel):
     resource: str
-    subscription_id: str
+    tenantId: str = None
+    subscriptionId: str = None
 
 
 @app.post("/device-code/{user_id}", response_model=DeviceCodeResponse)
@@ -74,27 +75,45 @@ async def get_device_code(user_id: str = Path(..., description="The unique ID of
 @app.post("/token/{user_id}", response_model=TokenResponse)
 async def get_token(token_request: TokenRequest = Body(...), user_id: str = Path(..., description="The unique ID of the user")):
 
-    try:
-        await __check_az_login_async(user_id=user_id)
+    await __check_az_login_async(user_id=user_id)
 
-        token_info = await authenticator.authenticate_async(user_id, token_request.resource)
+    token_info = await authenticator.authenticate_async(user_id, token_request.resource)
 
-        if token_info is None:
-            raise HTTPException(status_code=400, detail="Token was not found")
+    if token_info is None:
+        raise HTTPException(status_code=400, detail="Token was not found")
 
-        token = {
-            "accessToken": token_info["accessToken"],
-            "expiresOn": token_info["expiresOn"],
-            "expires_on": token_info["expires_on"],
-            "subscription": token_info["subscription"],
-            "tenant": token_info["tenant"],
-            "tokenType": token_info["tokenType"]
-        }
-        return token
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    token = {
+        "accessToken": token_info["accessToken"],
+        "expiresOn": token_info["expiresOn"],
+        "expires_on": token_info["expires_on"],
+        "subscription": token_info["subscription"],
+        "tenant": token_info["tenant"],
+        "tokenType": token_info["tokenType"]
+    }
+    return token
 
 
+
+@app.post("/tenant_token/{user_id}", response_model=TokenResponse)
+async def get_tenant_token(token_request: TenantTokenRequest = Body(...), user_id: str = Path(..., description="The unique ID of the user")):
+
+    await __check_az_login_async(user_id=user_id)
+
+    token_info = await authenticator.authenticate_async(user_id, token_request.resource, token_request.tenantId, token_request.subscriptionId)
+
+    if token_info is None:
+        raise HTTPException(status_code=400, detail="Token was not found")
+
+    token = {
+        "accessToken": token_info["accessToken"],
+        "expiresOn": token_info["expiresOn"],
+        "expires_on": token_info["expires_on"],
+        "subscription": token_request.subscriptionId,
+        "tenant": token_info["tenant"],
+        "tokenType": token_info["tokenType"]
+    }
+    return token
+    
 @app.get("/subscriptions/{user_id}")
 async def get_list_of_subscriptions_async(user_id: str = Path(..., description="The unique ID of the user")):
     """
@@ -107,22 +126,12 @@ async def get_list_of_subscriptions_async(user_id: str = Path(..., description="
         list: A list of subscriptions.
 
     """
+    await __check_az_login_async(user_id=user_id)
     try:
-        await __check_az_login_async(user_id=user_id)
-
         subscriptions = await authenticator.get_list_of_subscriptions_async(user_id)
         return subscriptions
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-async def __check_az_login_async(user_id: str):
-
-    logger.info(f"Checking if user: {user_id} has requested device code")
-
-    if not await authenticator.check_az_login_async(user_id=user_id):
-        raise HTTPException(
-            status_code=400, detail="Device code was not requested")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/healthz")
@@ -138,3 +147,12 @@ async def health_check():
         return {"status": "up", "version": version}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+async def __check_az_login_async(user_id: str):
+
+    logger.info(f"Checking if user: {user_id} has requested device code")
+
+    if not await authenticator.check_az_login_async(user_id=user_id):
+        raise HTTPException(
+            status_code=400, detail="Device code was not requested")

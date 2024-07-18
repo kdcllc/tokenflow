@@ -66,16 +66,13 @@ class AzureAuthenticator:
                 'enter the code (.*?) to authenticate', child.after.decode())
             if match:
                 device_code = match.group(1)
-                logger.debug(f"User: {user_id} device code: {
-                             device_code} was created successfully.")
+                logger.debug(f"User: {user_id} device code: {device_code} was created successfully.")
             else:
-                ex = f"User: {
-                    user_id} could not extract device code successfully."
+                ex = f"User: {user_id} could not extract device code successfully."
                 logger.error(ex)
                 raise Exception(ex)
         elif index == 1:
-            ex = f"User: {
-                user_id} command exited before device code was provided."
+            ex = f"User: {user_id} command exited before device code was provided."
             logger.error(ex)
             raise Exception(ex)
 
@@ -157,8 +154,8 @@ class AzureAuthenticator:
     async def __get_token_async(self,
                                 user_id: str,
                                 resource: str,
-                                subscription_id: str = None,
-                                tenant_id: str = None):
+                                tenant_id: str = None,
+                                subscription_id: str = None):
         try:
             # Wait for the command to finish
             child = self.users_data[user_id]['child']
@@ -168,17 +165,17 @@ class AzureAuthenticator:
             output = child.before.decode() + child.after.decode()
             logger.debug(output)
         except KeyError:
-            logger.warning(f"No child process found for user {
-                           user_id}. Continuing execution.")
+            logger.warning(f"No child process found for user {user_id}. Continuing execution.")
 
         env = self.__set_env(user_id)
 
         command = ['az', 'account', 'get-access-token', '--resource', resource]
-        if subscription_id and not tenant_id:
-            command.extend(['--subscription', subscription_id])
-
+        
         if tenant_id:
             command.extend(['--tenant', tenant_id])
+
+        if subscription_id and not tenant_id:
+            command.extend(['--subscription', subscription_id])
 
         # Execute the command
         loop = asyncio.get_event_loop()
@@ -223,29 +220,31 @@ class AzureAuthenticator:
         subscriptions = json.loads(result.stdout)
         return subscriptions
 
-    async def authenticate_async(self, user_id: str, resource: str):
+    async def authenticate_async(self, 
+                                 user_id: str, 
+                                 resource: str,
+                                 tenant_id: str = None,
+                                 subscription_id: str = None):
         retry_count = 0
         max_retries = 3
 
         while retry_count < max_retries:
             try:
-                token = await self.__get_token_async(user_id, resource)
-
-                logger.info("Authentication successful.")
+                token = await self.__get_token_async(user_id=user_id, resource=resource, tenant_id=tenant_id, subscription_id=subscription_id)
+                logger.info(f"User: {user_id} - Authentication successful.")
                 return token
             except Exception as e:
                 error_message = str(e)
                 if 'az login' in error_message:
-                    logger.error(
-                        "'az login' found in the error message. Returning None.")
+                    logger.error(f"User: {user_id} 'az login' found in the error message: {error_message}")
                     return None
 
-            logger.error("Waiting for user to authenticate..." + error_message)
-            await asyncio.sleep(10)
+            logger.error(f"User: {user_id} - Waiting for user to authenticate..." + error_message)
+            await asyncio.sleep(15)
             retry_count += 1
 
         if retry_count == max_retries:
-            logger.error("Authentication failed after 3 attempts.")
+            logger.error(f"User: {user_id} - Authentication failed after {max_retries} attempts.")
 
         return None
 
@@ -261,7 +260,7 @@ class AzureAuthenticator:
         result = await loop.run_in_executor(None, functools.partial(subprocess.run, ['az', 'version'], capture_output=True, text=True))
 
         if result.returncode != 0:
-            raise Exception(f'az --version command failed with exit code {result.returncode}: {result.stderr}')
+            raise Exception(f'az version command failed with exit code {result.returncode}: {result.stderr}')
 
         # Parse the output as JSON
         try:
