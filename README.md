@@ -1,5 +1,10 @@
 # TokenFlow
 
+[![GitHub](https://img.shields.io/github/license/kdcllc/tokenflow.svg)](https://github.com/kdcllc/tokenflow/blob/master/LICENSE)
+![Python](https://img.shields.io/badge/python-3.12-blue.svg)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111.0-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)
+[![GitHub stars](https://img.shields.io/github/stars/kdcllc/tokenflow.svg?style=social)](https://github.com/kdcllc/tokenflow/stargazers)
+
 ![I stand with Israel](./images/IStandWithIsrael.png)
 
 TokenFlow optimizes token generation and directory management across multiple tenants using Azure device flow. This repository empowers applications to capture user tokens seamlessly and utilize them for creating app registrations, users, and groups within accessible directories. Unlock the potential of multi-tenant applications with TokenFlow.
